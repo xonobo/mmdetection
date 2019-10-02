@@ -22,27 +22,33 @@ model = dict(
         basesize_ratio_range=(0.15, 0.9),
         anchor_ratios=([2], [2, 3], [2, 3], [2, 3], [2], [2]),
         target_means=(.0, .0, .0, .0),
-        target_stds=(0.1, 0.1, 0.2, 0.2)))
+        target_stds=(0.1, 0.1, 0.2, 0.2),
+        loss_cls=dict(
+            type='GHMC',
+            bins=30,
+            momentum=0.75,
+            use_sigmoid=True,
+            loss_weight=1.0),
+        loss_bbox=dict(
+            type='GHMR', mu=0.02, bins=10, momentum=0.7, loss_weight=10.0)))
 # model training and testing settings
 cudnn_benchmark = True
 train_cfg = dict(
     assigner=dict(
         type='MaxIoUAssigner',
         pos_iou_thr=0.5,
-        neg_iou_thr=0.5,
-        min_pos_iou=0.,
-        ignore_iof_thr=-1,
-        gt_max_assign_all=False),
-    smoothl1_beta=1.,
+        neg_iou_thr=0.4,
+        min_pos_iou=0,
+        ignore_iof_thr=-1),
     allowed_border=-1,
     pos_weight=-1,
-    neg_pos_ratio=3,
     debug=False)
 test_cfg = dict(
-    nms=dict(type='nms', iou_thr=0.45),
+    nms_pre=1000,
+    nms=dict(type='nms', iou_thr=0.5),
     min_bbox_size=0,
-    score_thr=0.02,
-    max_per_img=200)
+    score_thr=0.05,
+    max_per_img=100)
 # dataset settings
 dataset_type = 'WIDERFaceDataset'
 data_root = 'data/WIDERFace/'
@@ -129,7 +135,7 @@ log_config = dict(
 total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/ssd300_wider'
+work_dir = './work_dirs/ssd300_wider_ghm'
 load_from = None
 resume_from = None
 workflow = [('train', 1)]
